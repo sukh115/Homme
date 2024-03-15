@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MemberMapper">
+<!-- 회원가입 -->
+<insert id="register">
+	insert into MEMBER(MEM_NO, MEM_ID, MEM_PW, MEM_NAME, MEM_POST, MEM_ADR, MEM_TEL, MEM_EMAIL, MEM_POINT)
+	values(MEMBER_SEQ.NEXTVAL, #{MEM_ID}, #{MEM_PW}, #{MEM_NAME}, #{MEM_POST}, #{MEM_ADR}, #{MEM_TEL}, #{MEM_EMAIL}, 1000)
+</insert>
+<!-- 로그인 -->
+<select id="login" resultType="kr.co.vo.MemberVO">
+	select * FROM MEMBER WHERE MEM_ID = #{MEM_ID} <!-- AND MEM_PW = #{MEM_PW} -->
+</select>
+<!-- 로그인된 경우 해당 세션id와 유효시간을 사용자 테이블에 세팅한다.-->
+<update id="keepLogin">
+    update MEMBER SET MEM_CKID = #{MEM_CKID}, MEM_CKLIMIT = #{MEM_CKLIMIT} WHERE MEM_ID=#{MEM_ID}
+</update>
+<!-- 유효기간이 남아 있으면서 해당 sessionId를 가지는 사용자 정보를 꺼내오는 부분-->
+<select id="checkUserWithSessionKey" resultType="kr.co.vo.MemberVO">
+    select * FROM MEMBER WHERE MEM_CKID = #{MEM_CKID}
+</select>
+<!-- 회원정보 수정 -->
+<update id="memberUpdate">
+	update MEMBER SET <!-- MEM_PW = #{MEM_PW}, -->MEM_NAME = #{MEM_NAME}, MEM_POST = #{MEM_POST}, MEM_ADR = #{MEM_ADR}, MEM_TEL = #{MEM_TEL}, MEM_EMAIL = #{MEM_EMAIL} WHERE MEM_ID = #{MEM_ID}
+</update>
+<!-- 회원삭제 -->
+<delete id="memberDelete">
+	delete FROM MEMBER WHERE MEM_ID =#{MEM_ID} AND MEM_NAME =#{MEM_NAME} <!-- AND MEM_PW=#{MEM_PW} -->
+</delete>
+<!-- 패스워드 체크 -->
+<select id="passChk" resultType="int">
+	select COUNT (*) FROM MEMBER WHERE MEM_ID = #{MEM_ID} AND MEM_PW = #{MEM_PW}
+</select>
+<!-- 아이디 중복체크 -->
+<select id="idChk" resultType="int" >
+	select COUNT (*) FROM MEMBER WHERE MEM_ID = #{MEM_ID}
+</select>
+<!-- 아이디 찾기 -->
+<select id="findid" resultType="kr.co.vo.MemberVO">
+	select MEM_ID FROM MEMBER WHERE MEM_NAME = #{MEM_NAME} AND MEM_EMAIL = #{MEM_EMAIL}
+</select>
+<!-- 아이디,이메일 유효성 검사 -->
+<select id="findPwCheck" resultType="int">
+select count(*) from MEMBER WHERE MEM_EMAIL = #{MEM_EMAIL} AND MEM_ID = #{MEM_ID}
+</select>
+<!-- 임시비밀번호변경 -->
+<update id="findPw" >
+update MEMBER SET MEM_PW = #{MEM_PW} WHERE MEM_ID = #{MEM_ID} AND MEM_EMAIL = #{MEM_EMAIL}
+</update>
+<!-- 비밀번호 변경 -->
+<update id="changePw">
+update MEMBER SET MEM_PW = #{MEM_PW} WHERE MEM_ID = #{MEM_ID}
+</update>
+<!-- SNS로그인  -->
+<select id="snsLoginCheck" resultType="int">
+select COUNT(*) FROM MEMBER WHERE MEM_ID = #{MEM_ID}
+</select>
+<!-- SNS회원가입 -->
+<insert id="snsRegister">
+	insert INTO MEMBER(MEM_NO,MEM_ID, MEM_NAME, MEM_EMAIL) VALUES(MEMBER_SEQ.NEXTVAL, #{MEM_ID}, #{MEM_NAME},#{MEM_EMAIL})
+</insert>
+
+<!-- 주문조회 리스트 -->
+<select id="getOrderList" resultMap="OrderItemVO">
+	select	 a.ORDERITEM_NO, a.ORDERITEM_IMG, a.ORDERITEM_NAME, a.ORDERITEM_MEM_NO,
+			 a.ORDERITEM_OPTION, a.ORDERITEM_PRICE, a.ORDERITEM_ITEM_NO,
+			 a.ORDERITEM_SELECT_VOL, a.ORDERITEM_ORDER_NO, a.ORDERITEM_DATE,
+			 b.ordered_no ,b.ordered_paystate,b.ordered_delivstate,b.ordered_delivnum
+			 FROM ORDERITEM a left outer join ORDERED b on a.orderitem_order_no = b.ordered_no
+			 WHERE ORDERITEM_MEM_NO = #{orderitem_mem_no}
+			 ORDER BY ORDERITEM_NO DESC
+
+</select>
+
+	<resultMap type="kr.co.vo.OrderItemVO" id="OrderItemVO">
+	<result column="ORDERITEM_NO" property="order_item_no" />
+	<result column="ORDERITEM_IMG" property="order_item_img" />
+	<result column="ORDERITEM_NAME" property="order_item_name" />
+	<result column="ORDERITEM_OPTION" property="order_item_option" />
+	<result column="ORDERITEM_PRICE" property="order_item_price" />
+	<result column="ORDERITEM_ITEM_NO" property="order_item_no" />
+	<result column="ORDERITEM_SELECT_VOL" property="order_select_vol" />
+	<result column="ORDERITEM_DATE" property="order_item_date" />
+	<collection property="orderedVO" resultMap="OrderedVO"></collection>
+	</resultMap>
+
+	<resultMap type="kr.co.vo.OrderedVO" id="OrderedVO">
+	<result column="ORDERED_NO" property="ordered_no" />
+	<result column="ORDERED_PAYSTATE" property="ordered_paystate" />
+	<result column="ORDERED_DELIVSTATE" property="ordered_delivstate" />
+	<result column="ORDERED_DELIVNUM" property="ordered_delivnum" />
+	</resultMap>
+
+	<insert id="wishListInsert">
+	INSERT INTO WISHLIST (wish_no , wish_mem_no , wish_item_no , wish_option_no
+	,wish_option_content,wish_item_img,wish_item_name,wish_item_price )VALUES(
+	(SELECT NVL(MAX(wish_no), 0) + 1 FROM WISHLIST) , #{wish_mem_no}, #{wish_item_no}, #{wish_option_no}, #{wish_option_content}
+	, #{wish_item_img}, #{wish_item_name}, #{wish_item_price}
+	)
+	</insert>
+
+	<select id="wishListCheck" resultType="int">
+	select count(*) from WISHLIST where wish_mem_no = #{wish_mem_no} AND wish_option_no = #{wish_option_no}
+	</select>
+
+	<select id="wishList" resultType="kr.co.vo.WishListVO">
+	SELECT * FROM WISHLIST WHERE wish_mem_no = #{wish_mem_no}
+	</select>
+
+	<delete id="wishListDelete">
+	delete from wishList where wish_no = #{wish_no}
+	</delete>
+
+	<select id="history" resultType="kr.co.vo.HistoryVO">
+	select * from history where history_mem_no = #{history_mem_no}
+	</select>
+
+	<select id="loginCheck" resultType="int">
+	<![CDATA[
+	select count(*) from MEMBER where MEM_NO = #{MEM_NO} AND MEM_RANK = 2 AND #{MEM_SECTIONTIME} > TO_DATE(SYSDATE,'YYYY-MM-DD')
+	]]>
+	</select>
+
+	<select id="coupon" resultType="int"> select COUNT(CPN_MEM_NO) FROM coupon WHERE cpn_mem_no = #{cpn_mem_no} </select>	<!-- 일대일 상담 -->
+	<select id="consult" resultType="kr.co.vo.BoardVO">
+	SELECT B_NO,
+		   B_TITLE,
+		   B_WRITER,
+		   B_CONTENT,
+		   B_DATE,
+		   B_CATE
+
+	FROM BOARD WHERE B_CATE= 2 AND B_WRITER= #{b_writer}
+	</select>
+
+	<update id="updatePaystate">
+update ordered set ORDERED_PAYSTATE = 2 where ordered_no = #{ordered_no}
+</update>
+
+</mapper>

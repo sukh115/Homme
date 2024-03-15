@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MainMapper">
+
+	<select id="itemList" resultType="kr.co.vo.ItemVO"
+		parameterType="kr.co.vo.ItemCriteria">
+		SELECT ITEM_NO , ITEM_NAME , ITEM_PRICE , ITEM_SIZE, ITEM_COLOR,
+		ITEM_DISC, ITEM_CONTENT
+		, ITEM_IMGMAIN, ITEM_IMGSUB, ITEM_DATE,
+		ITEM_STAR, ITEM_CATEMAIN,
+		ITEM_CATESUB
+		FROM (
+		SELECT ITEM_NO , ITEM_NAME
+		, ITEM_PRICE , ITEM_SIZE, ITEM_COLOR, ITEM_DISC,
+		ITEM_CONTENT
+		,
+		ITEM_IMGMAIN, ITEM_IMGSUB,ITEM_DATE, ITEM_STAR, ITEM_CATEMAIN,
+		ITEM_CATESUB,
+		ROW_NUMBER() OVER(
+		<include refid="sort" />
+		) AS RNUM
+		FROM ITEM
+		WHERE ITEM_CATEMAIN =
+		<include refid="catemain" />
+		AND
+		ITEM_CATESUB =
+		<include refid="catesub" />
+		)
+		WHERE RNUM BETWEEN #{rowStart} AND #{rowEnd}
+		<include refid="sort" />
+
+	</select>
+
+	<select id="itemCount" resultType="int" parameterType="kr.co.vo.ItemCriteria">
+
+SELECT COUNT(*) FROM (select * from ITEM where
+ITEM_CATEMAIN =
+<include refid="catemain"/>
+AND
+ITEM_CATESUB =
+<include refid="catesub"/>
+) WHERE 
+<![CDATA[
+ITEM_NO > 0
+]]>
+	</select>
+
+
+	<!-- 정렬 -->
+	<sql id="sort">
+		<if test="sort == '' ">
+			ORDER BY ITEM_NO DESC
+		</if>
+
+		<if test="sort == 'no' ">
+			ORDER BY ITEM_NO DESC
+		</if>
+
+		<if test="sort == 'pricedesc' ">
+			ORDER BY ITEM_PRICE DESC
+		</if>
+
+		<if test="sort == 'priceasc' ">
+			ORDER BY ITEM_PRICE ASC
+		</if>
+
+	</sql>
+
+	<!-- 메인카테고리 -->
+	<sql id="catemain">
+		<if test="catemain == ''">
+			'item'
+		</if>
+		<if test="catemain == 'item'">
+			'item'
+		</if>
+		<if test="catemain == 'main'">
+			'main'
+		</if>
+		<if test="catemain == 'popular'">
+			'popular'
+		</if>
+	</sql>
+
+	<!-- 서브카테고리 -->
+	<sql id="catesub">
+		<if test="catesub == 'outer' ">
+			'jumper' OR ITEM_CATESUB = 'coat' OR ITEM_CATESUB =
+			'jacket' OR ITEM_CATESUB
+			= 'padding'
+		</if>
+		<if test="catesub == 'top' ">
+			'long' OR ITEM_CATESUB = 'knit' OR ITEM_CATESUB =
+			'halftee' OR ITEM_CATESUB
+			= 'shirts' OR ITEM_CATESUB = 'blank'
+		</if>
+		<if test="catesub == 'bottom' ">
+			'pants' OR ITEM_CATESUB = 'denim' OR ITEM_CATESUB =
+			'halfpants' OR
+			ITEM_CATESUB = 'jogger' OR ITEM_CATESUB = 'sult'
+		</if>
+		<if test="catesub == 'shoes' ">
+			'sneakers' OR ITEM_CATESUB = 'boots' OR ITEM_CATESUB =
+			'walker'
+			OR ITEM_CATESUB = 'derby' OR ITEM_CATESUB = 'sandal'
+		</if>
+		<if test="catesub == 'jumper'">
+			'jumper'
+		</if>
+		<if test="catesub == 'coat'">
+			'coat'
+		</if>
+		<if test="catesub == 'jacket'">
+			'jacket'
+		</if>
+		<if test="catesub == 'padding'">
+			'padding'
+		</if>
+		<if test="catesub == 'long'">
+			'long'
+		</if>
+		<if test="catesub == 'knit'">
+			'knit'
+		</if>
+		<if test="catesub == 'halftee'">
+			'halftee'
+		</if>
+		<if test="catesub == 'shirts'">
+			'shirts'
+		</if>
+		<if test="catesub == 'blank'">
+			'blank'
+		</if>
+		<if test="catesub == 'pants'">
+			'pants'
+		</if>
+		<if test="catesub == 'denim'">
+			'denim'
+		</if>
+		<if test="catesub == 'halfpants'">
+			'halfpants'
+		</if>
+		<if test="catesub == 'jogger'">
+			'jogger'
+		</if>
+		<if test="catesub == 'sult'">
+			'sult'
+		</if>
+		<if test="catesub == 'sneakers'">
+			'sneakers'
+		</if>
+		<if test="catesub == 'boots'">
+			'boots'
+		</if>
+		<if test="catesub == 'walker'">
+			'walker'
+		</if>
+		<if test="catesub == 'derby'">
+			'derby'
+		</if>
+		<if test="catesub == 'sandal'">
+			'sandal'
+		</if>
+	</sql>
+
+	<!-- 상품내용 -->
+	<select id="itemContent" resultType="kr.co.vo.ItemVO">
+		SELECT ITEM_NO , ITEM_NAME ,
+		ITEM_PRICE , ITEM_SIZE, ITEM_COLOR, ITEM_DISC,
+		ITEM_CONTENT,
+		ITEM_SUBCONTENT
+		, ITEM_IMGMAIN, ITEM_IMGSUB, ITEM_DATE, ITEM_STAR,
+		ITEM_CATEMAIN,
+		ITEM_CATESUB , ITEM_MODEL FROM
+		ITEM WHERE ITEM_NO =
+		#{item_no}
+
+	</select>
+
+	<!-- 상품옵션 -->
+	<select id="itemOption" resultType="kr.co.vo.ItemVO">
+		SELECT OPTION_NO,
+		OPTION_CONTENT , OPTION_ITEM_NO , OPTION_VOL FROM ITEMOPTION WHERE
+		OPTION_ITEM_NO = #{item_no}
+	</select>
+
+	<!-- 장바구니 등록 -->
+	<insert id="cartInsert">
+		INSERT INTO CART (CART_NO  , CART_ITEM_NO
+		, CART_CKLIMIT , CART_OPTION_CONTENT , CART_OPTION_NO, 
+		<if test="cart_mem_no == 0">
+		CART_CKID 
+		</if>
+		<if test="cart_mem_no != 0">
+		CART_MEM_NO
+		</if>
+		)VALUES(
+		(SELECT
+		NVL(MAX(CART_NO), 0) + 1 FROM CART) ,
+		 #{cart_item_no} ,SYSDATE , #{cart_option_content} , #{cart_option_no} ,
+		<if test="cart_mem_no == 0">
+		 #{cart_ckid}
+		</if>
+		<if test="cart_mem_no != 0">
+		${cart_mem_no}
+		</if>
+		
+		)
+
+	</insert>
+	
+	<!-- 로그인시 비회원장바구니 -> 회원장바구니 -->
+	<update id="cartUpdate">
+	UPDATE CART SET cart_mem_no = #{mem_no} WHERE CART_CKID = #{cart_ckid}
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="cartDelete">
+		DELETE FROM CART WHERE CART_NO = ${cart_no}
+	</delete>
+
+	<!-- 전체삭제 비회원 -->
+	<delete id="cartDeleteCk">
+		DELETE FROM CART WHERE CART_CKID = ${cart_ckid}
+	</delete>
+
+	<!-- 전체삭제 회원 -->
+	<delete id="cartDeleteMem">
+		DELETE FROM CART WHERE CART_MEM_NO = ${cart_mem_no}
+	</delete>
+
+	<!-- 상품주문 -->
+	<insert id="orderedInsert">
+	</insert>
+
+	<!-- 장바구니 뷰 -->
+	<select id="cartList" resultMap="CartVO">
+		select a.cart_no, a.cart_option_no, a.cart_option_content, b.item_no,
+		b.item_name , b.item_price ,b.item_imgmain, c.option_vol , c.option_content
+		from CART a left outer join ITEM b on a.cart_item_no = b.item_no 
+		left outer join ITEMOPTION c on a.cart_option_no = c.option_no
+		where
+		<if test="cart_mem_no == 0">
+			cart_ckid = #{cart_ckid}
+		</if>
+		<if test="cart_mem_no != 0">
+			cart_mem_no = #{cart_mem_no}
+		</if>
+	</select>
+	
+	<resultMap type="kr.co.vo.CartVO" id="CartVO">
+	<result column="CART_NO" property="cart_no" />
+	<result column="CART_MEM_NO" property="cart_mem_no" />
+	<result column="CART_ITEM_NO" property="cart_item_no" />
+	<result column="CART_OPTION_NO" property="cart_option_no" />
+	<result column="CART_OPTION_CONTENT" property="cart_option_content" />
+	<collection property="itemVO" resultMap="ItemVO"></collection>
+	<collection property="optionVO" resultMap="OptionVO"></collection>
+	
+	</resultMap>
+	
+	<resultMap type="kr.co.vo.ItemVO" id="ItemVO">
+	<result column="ITEM_NO" property="item_no" />
+	<result column="ITEM_NAME" property="item_name" />
+	<result column="ITEM_PRICE" property="item_price" />
+	<result column="ITEM_SIZE" property="item_size" />
+	<result column="ITEM_COLOR" property="item_color" />
+	<result column="ITEM_CONTENT" property="item_content" />
+	<result column="ITEM_IMGSUB" property="item_imgsub" />
+	<result column="ITEM_STAR" property="item_star" />
+	<result column="ITEM_CATEMAIN" property="item_catemain" />
+	<result column="ITEM_CATESUB" property="item_catesub" />
+	<result column="ITEM_MODEL" property="item_model" />
+	<result column="ITEM_IMGMAIN" property="item_imgmain" />	
+	</resultMap>
+	
+	<resultMap type="kr.co.vo.OptionVO" id="OptionVO">
+	<result column="OPTION_NO" property="option_no" />
+	<result column="OPTION_CONTENT" property="option_content" />
+	<result column="OPTION_ITEM_NO" property="option_item_no" />
+	<result column="OPTION_VOL" property="option_vol" />
+	</resultMap>
+	
+	<select id="cartMemCount" resultType="int">
+	SELECT COUNT(*) FROM CART WHERE CART_MEM_NO = #{cart_mem_no}
+	</select>
+	
+	
+	<select id="cartMemCheck" resultType="int">
+	SELECT COUNT(*) FROM CART WHERE CART_MEM_NO = #{cart_mem_no} 
+	AND CART_OPTION_NO = #{cart_option_no}
+	</select>
+	
+	<select id="cartCheck" resultType="int">
+	SELECT COUNT(*) FROM CART WHERE CART_ckid = #{cart_ckid} 
+	AND CART_OPTION_NO = #{cart_option_no}
+	</select>
+	
+	<!-- 쿠폰목록 -->
+	<select id="orderCoupon" resultType="kr.co.vo.CouponVO">
+	<![CDATA[
+	SELECT * FROM COUPON WHERE TO_CHAR(CPN_EDATE ,'YYYYMMDD') > TO_CHAR(SYSDATE,'YYYYMMDD') AND CPN_MEM_NO = #{mem_no}
+	]]>
+	</select>
+	
+	<insert id="orderInsert">
+	INSERT INTO ORDERED 
+	(ORDERED_NO , ORDERED_TO_NAME , ORDERED_TO_TEL , ORDERED_TO_EMAIL , ORDERED_TO_ADR, ORDERED_TO_POST
+	,ORDERED_FROM_NAME, ORDERED_FROM_TEL , ORDERED_FROM_ADR , ORDERED_FROM_POST
+	,ORDERED_CARTPRICE , ORDERED_ORDERPRICE , ORDERED_CPN_NAME , ORDERED_CPN_DISC , ORDERED_USEPOINT
+	, ORDERED_PAYHOW , ORDERED_MEM_NO ) VALUES(
+	#{ordered_no} , #{ordered_to_name} , #{ordered_to_tel} ,  #{ordered_to_email} , #{ordered_to_adr} , #{ordered_to_post} , 
+	#{ordered_from_name} , #{ordered_from_tel} , #{ordered_from_adr} , #{ordered_from_post} , 
+	#{ordered_cartprice} , #{ordered_orderprice} , #{ordered_cpn_name} , #{ordered_cpn_disc} , #{ordered_usepoint} , 
+	#{ordered_payhow} , #{ordered_mem_no} 
+	)
+	</insert>
+	
+	<insert id="orderItemInsert">
+	INSERT INTO ORDERITEM ( ORDERITEM_NO, ORDERITEM_IMG , ORDERITEM_NAME ,ORDERITEM_OPTION ,ORDERITEM_PRICE ,
+	ORDERITEM_ITEM_NO, ORDERITEM_SELECT_VOL ,ORDERITEM_ORDER_NO,ORDERITEM_MEM_NO) VALUES(
+	(SELECT NVL(MAX(ORDERITEM_NO), 0) + 1 FROM ORDERITEM) , #{orderitem_img} , #{orderitem_name} , #{orderitem_option} , #{orderitem_price} ,
+	 #{orderitem_item_no} , #{orderitem_select_vol} , #{orderitem_order_no} , #{orderitem_mem_no}
+	)
+	
+	</insert>
+	
+	<insert id="historyInsert">
+	INSERT INTO HISTORY (HISTORY_NO , HISTORY_CONTENT , HISTORY_MEM_NO )
+	VALUES(
+	(SELECT NVL(MAX(HISTORY_NO), 0) + 1 FROM HISTORY), #{history_content} , #{history_mem_no}
+	)
+	</insert>
+	
+	<delete id="couponDelete">
+	DELETE FROM COUPON where CPN_NAME = #{cpn_name} AND CPN_MEM_NO = #{cpn_mem_no}
+	</delete>
+	
+	<update id="pointDelete">
+	UPDATE MEMBER SET MEM_POINT = MEM_POINT - #{ordered_usepoint} where MEM_NO = #{ordered_mem_no}
+	</update>
+	
+	<update id="itemVolDelete">
+	UPDATE ITEMOPTION SET OPTION_VOL = OPTION_VOL - #{orderitem_select_vol} where OPTION_NO = #{orderitem_no}
+	</update>
+	
+	<delete id="cartReset">
+	DELETE FROM CART WHERE CART_MEM_NO = #{ordered_mem_no}
+	</delete>
+
+	<select id="selectList" resultType="kr.co.vo.ItemVO">
+		SELECT ITEM_NO , ITEM_NAME , ITEM_PRICE , ITEM_SIZE, ITEM_COLOR,
+		ITEM_DISC, ITEM_CONTENT
+		, ITEM_IMGMAIN, ITEM_IMGSUB, ITEM_DATE,
+		ITEM_STAR, ITEM_CATEMAIN,
+		ITEM_CATESUB
+		FROM ITEM 
+		WHERE 
+		ITEM_NAME LIKE '%' || #{keyword} || '%'
+		ORDER BY ITEM_NO DESC
+
+	</select>
+	
+	<select id="indexLatest" resultType="kr.co.vo.ItemVO">
+		<![CDATA[
+		SELECT ITEM_NO , ITEM_NAME, ITEM_PRICE , ITEM_IMGMAIN, ITEM_IMGSUB
+		FROM ITEM
+		WHERE ROWNUM <= 8
+		ORDER BY ITEM_NO DESC
+		]]>
+	</select>
+	
+	<select id="indexMainOuter" resultType="kr.co.vo.ItemVO">
+	<![CDATA[
+	SELECT ITEM_NO , ITEM_IMGMAIN , ITEM_NAME , ITEM_CATESUB
+	FROM (select item_no , item_imgmain, item_name , item_catesub , item_catemain from item where ITEM_CATEMAIN = 'mainpage' AND  
+    ITEM_CATESUB = 'jumper' OR ITEM_CATESUB = 'coat' OR ITEM_CATESUB = 'jacket' OR ITEM_CATESUB = 'padding'
+    order by item_no desc )
+	WHERE ROWNUM <= 1 order by item_no DESC
+	]]>
+	</select>
+	
+	<select id="indexMainTop" resultType="kr.co.vo.ItemVO">
+	<![CDATA[
+	SELECT ITEM_NO , ITEM_IMGMAIN , ITEM_NAME , ITEM_CATESUB
+	FROM (select item_no , item_imgmain, item_name , item_catesub , item_catemain from item where ITEM_CATEMAIN = 'mainpage' AND  
+    ITEM_CATESUB = 'long' OR ITEM_CATESUB = 'knit' OR ITEM_CATESUB ='halftee' OR ITEM_CATESUB= 'shirts' OR ITEM_CATESUB = 'blank'
+    order by item_no desc )
+	WHERE ROWNUM <= 1 order by item_no desc
+	]]>
+	</select>
+	
+	<select id="indexMainBotton" resultType="kr.co.vo.ItemVO">
+	<![CDATA[
+		SELECT ITEM_NO , ITEM_IMGMAIN , ITEM_NAME , ITEM_CATESUB
+	FROM (select item_no , item_imgmain, item_name , item_catesub , item_catemain from item where ITEM_CATEMAIN = 'mainpage' AND  
+    ITEM_CATESUB = 'pants' OR ITEM_CATESUB = 'denim' OR ITEM_CATESUB ='halfpants' OR ITEM_CATESUB = 'jogger' OR ITEM_CATESUB = 'sult'
+    order by item_no desc )
+	WHERE ROWNUM <= 1 order by item_no desc
+	]]>
+	</select>
+	
+	<select id="indexMainShoes" resultType="kr.co.vo.ItemVO">
+	<![CDATA[
+	SELECT ITEM_NO , ITEM_IMGMAIN , ITEM_NAME , ITEM_CATESUB
+	FROM (select item_no , item_imgmain, item_name , item_catesub , item_catemain from item where ITEM_CATEMAIN = 'mainpage' AND  
+    ITEM_CATESUB = 'sneakers' OR ITEM_CATESUB = 'boots' OR ITEM_CATESUB ='walker'OR ITEM_CATESUB = 'derby' OR ITEM_CATESUB = 'sandal'
+    order by item_no desc )
+	WHERE ROWNUM <= 1 order by item_no desc
+	]]>
+	</select>
+	
+	<!-- 랜덤으로 메인페이지 뽑기 -->
+	<select id="indexRandom" resultType="kr.co.vo.ItemVO">
+	<![CDATA[
+	select * from (select * from item order by DBMS_RANDOM.RANDOM) where rownum <= 10
+	]]>
+	</select>
+	
+	<select id="indexNews" resultType="kr.co.vo.BoardVO">
+	<![CDATA[
+	select * from board where b_cate = 5 AND ROWNUM <= 6 order by b_no desc
+	]]>
+	</select>
+	
+	
+	
+</mapper>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.3.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<!-- 오라클 접속 -->
+	<bean
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource"
+		id="dataSource">
+		<property name="driverClassName"
+			value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy" />
+		<property name="url"
+			value="jdbc:oracle:thin:@3.35.139.56:1521/xe" />
+		<property name="username" value="master" />
+		<property name="password" value="1234" />
+	</bean>
+
+	<!-- Mybatis 연동 -->
+	<bean id="sqlSessionFactory"
+		class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation"
+			value="classpath:/mybatis-config.xml"></property>
+		<property name="mapperLocations"
+			value="classpath:mappers/**/*Mapper.xml" />
+	</bean>
+
+	<bean id="sqlSession"
+		class="org.mybatis.spring.SqlSessionTemplate"
+		destroy-method="clearCache">
+		<constructor-arg name="sqlSessionFactory"
+			ref="sqlSessionFactory"></constructor-arg>
+	</bean>
+
+	<!-- gmail설정 -->
+	<bean id="mailSender2"
+		class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com" />
+		<property name="port" value="587" />
+		<property name="username" value="rinkim98@gmail.com" /> <!-- 자신의 이메일 아이디 -->
+		<property name="password" value="dkqjwl12!" /> <!-- 자신의 비밀번호 -->
+		<!-- email 요청시는 SMTP -->
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.transport.protocol">smtp</prop>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+				<prop key="mail.debug">true</prop>
+				<prop key="mail.smtp.ssl.trust">smtp.gmail.com</prop>
+				<prop key="mail.smtp.ssl.protocols">TLSv1.2</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- 네이버 로그인 -->
+	<bean id="naverClientID" class="java.lang.String">
+		<constructor-arg value="ud0M6Rc7Eef1KpFXiN0B" />
+	</bean>
+	<bean id="naverClientSecret" class="java.lang.String">
+		<constructor-arg value="cgRVSWKZs5" />
+	</bean>
+	<bean id="naverRedirectUrl" class="java.lang.String">
+		<constructor-arg
+			value="http://localhost:80/member/naverLogin" />
+	</bean>
+
+	<bean id="naverSns" class="kr.co.sns.SnsValue">
+		<constructor-arg value="naver" />
+		<constructor-arg ref="naverClientID" />
+		<constructor-arg ref="naverClientSecret" />
+		<constructor-arg ref="naverRedirectUrl" />
+	</bean>
+	<!-- google Class Bean설정 추가 -->
+	<!-- 클라이언트ID와 보안비밀 세팅 -->
+	<bean id="googleConnectionFactory"
+		class="org.springframework.social.google.connect.GoogleConnectionFactory">
+		<constructor-arg
+			value="9285310310-2v39jan2tfcps8bld92rucedbsps2ccj.apps.googleusercontent.com" />
+		<constructor-arg
+			value="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" />
+	</bean>
+	<!-- 승인된 자바스크립트 원본과 승인된 리디렉션 URI -->
+	<bean id="googleOAuth2Parameters"
+		class="org.springframework.social.oauth2.OAuth2Parameters">
+		<property name="scope"
+			value="https://www.googleapis.com/auth/plus.login" />
+		<property name="redirectUri"
+			value="http://localhost/member/oauth2callback" />
+	</bean>
+
+	<!-- 트랜젝션 매니저 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<!-- @Transactional 애노테이션을 sacn하기 위한 설정 -->
+	<tx:annotation-driven />
+
+
+</beans>

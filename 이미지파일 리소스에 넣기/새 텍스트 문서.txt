@@ -1,0 +1,9 @@
+/resources/assets/images/ 
+에 넣기
+
+indexpic 은
+/resources/assets/images/shop 폴더안에 넣기
+
+
+mp파일은 c드라이브에 넣기
+
